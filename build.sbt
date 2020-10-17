@@ -1,8 +1,7 @@
-enablePlugins(PackPlugin)
 name := "AUDESOME"
 version := "0.1"
 
-scalaVersion := "2.13.3"
+scalaVersion := "2.12.10"
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.5"
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.4.5"
@@ -16,8 +15,3 @@ libraryDependencies += "de.micromata.jak" % "JavaAPIforKml" % "2.2.1"
 libraryDependencies += "com.novocode" % "junit-interface" % "0.8" % "test->default"
 libraryDependencies += "com.github.workingDog" %% "scalakml" % "1.3"
 libraryDependencies += "de.micromata.jak" % "JavaAPIforKml" % "2.2.1"
-
-assemblyMergeStrategy in assembly := {
-  case PathList("META-INF", xs @ _*) => MergeStrategy.discard
-  case x => MergeStrategy.first
-}
