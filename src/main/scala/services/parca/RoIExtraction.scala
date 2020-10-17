@@ -24,62 +24,68 @@ import scala.util.Random
 
 object RoIExtraction {
 
-  var lookupTag:Map[String,Int] = Map()
+  var lookupTag: Map[String, Int] = Map()
   var current_sampling_rate = 5000
   val numNeighbours: Int = 4
   val appName = "RoIExtraction"
   val defaultDataset: String = "/home/emanuele/Documents/Tesi/FlickrRome2017.json"
   val defaultStopWord: String = "/home/emanuele/IdeaProjects/SparkTest/input/services.keywords/keywordslcurve.txt"
 
-  val createFromRdd: (Row, Seq[String]) => Array[Tuple2[Int,ClusterPoint]] = {
+  val createFromRdd: (Row, Seq[String]) => Array[Tuple2[Int, ClusterPoint]] = {
     (x, y) => {
-      var returnStructure = Array[Tuple2[Int,ClusterPoint]]()
+      var returnStructure = Array[Tuple2[Int, ClusterPoint]]()
       val tags = x.getAs[mutable.WrappedArray[String]](5)
-      tags.foreach(elem=>{
-        if (y.contains(elem)){
-          returnStructure = returnStructure :+ Tuple2(lookupTag.get(elem).get,new ClusterPoint(x.getDouble(1),x.getDouble(0), SpatialContext.GEO))
+      tags.foreach(elem => {
+        if (y.contains(elem)) {
+          returnStructure = returnStructure :+ Tuple2(lookupTag(elem), new ClusterPoint(x.getDouble(1), x.getDouble(0), SpatialContext.GEO))
         }
       })
       returnStructure
     }
   }
 
-  def sampling(x: (Int, Iterable[ClusterPoint])): (Int,Iterable[ClusterPoint]) = {
-    if (x._2.size > current_sampling_rate){
+  def sampling(x: (Int, Iterable[ClusterPoint])): (Int, Iterable[ClusterPoint]) = {
+    if (x._2.size > current_sampling_rate) {
       return (x._1, Random.shuffle(x._2).take(current_sampling_rate))
     }
-    (x._1,x._2)
+    (x._1, x._2)
   }
 
   def calculateEpsWithThreshold(x: (Int, Iterable[ClusterPoint])): (Int, Iterable[ClusterPoint], Double) = {
-    val distances = KDistUtility.calculateKNN(x._2.toList.asJava,numNeighbours);
-    val eps = KDistUtility.calculateEpsWithThreshold("",distances,0.27)
-    (x._1,x._2,eps)
+    val distances = KDistUtility.calculateKNN(x._2.toList.asJava, numNeighbours);
+    val eps = KDistUtility.calculateEpsWithThreshold("", distances, 0.27)
+    (x._1, x._2, eps)
   }
 
   def applyRoIWithEps: ((Int, util.List[ClusterPoint], Double) => (String, Geometry)) = {
     (x, y, eps) => {
       val tIn = System.currentTimeMillis()
       val geom = GeometryUtils.getRoI(y, eps, numNeighbours)
-      if (System.currentTimeMillis()-tIn > 5000){
+      if (System.currentTimeMillis() - tIn > 5000) {
         println(x)
         println(y.size())
         println("Elapsed time in apply roi: " + (System.currentTimeMillis() - tIn) + "ns")
       }
-      (lookupTag.find(_._2==x).get._1, geom)
+      (lookupTag.find(_._2 == x).get._1, geom)
     }
   }
 
 
-  def automaticEpsDbcan(keywords:Seq[String], dataframe:org.apache.spark.sql.DataFrame, partitions: Int) = {
+  def automaticEpsDbcan(keywords: Seq[String], dataframe: org.apache.spark.sql.DataFrame, partitions: Int) = {
     val tIn = System.currentTimeMillis()
     var selectedNumberOfPartitions = 50
     if (partitions == 1) {
       selectedNumberOfPartitions = partitions;
     }
-    else{
+    else {
       selectedNumberOfPartitions = keywords.size
     }
+    keywords.foreach(x => {
+      if (!lookupTag.contains(x)) {
+        lookupTag += (x -> nexInt)
+        nexInt += 1
+      }
+    })
     //Grouping by poi and collect points
     val data = dataframe
       .rdd
@@ -90,7 +96,7 @@ object RoIExtraction {
 
     //Partition data using HashPartitioning on integer columns. Using data.count() we assign one partition to a single task
     val partitionedData = data
-      //.partitionBy(new HashPartitioner(selectedNumberOfPartitions))
+    //.partitionBy(new HashPartitioner(selectedNumberOfPartitions))
     //compute eps for services.keywords
     val epsComputed = partitionedData.map(x => calculateEpsWithThreshold(x))
     //collect result
@@ -114,32 +120,32 @@ object RoIExtraction {
       stopWord = defaultStopWord
     print("Insert number of fixed point (default = 5000): ")
     var numberOfFixedPoitn = scala.io.StdIn.readInt()
-    if (numberOfFixedPoitn>0)
+    if (numberOfFixedPoitn > 0)
       current_sampling_rate = numberOfFixedPoitn
-    val tests = Array[Int](8,16,32,64)
+    val tests = Array[Int](8, 16, 32, 64)
     var results = Seq[TestResults]()
     val gson = new Gson()
     val logger = Logger.getLogger("RoIExtraction@Test")
     logger.info("Executing test for RoIExtraction")
-    tests.foreach(step=>{
+    tests.foreach(step => {
       logger.info("Executing step %d".format(step))
       val tIn = System.currentTimeMillis()
       val keywords = Source.fromFile(stopWord).getLines.toSet
-      keywords.foreach(x=>{
-        if (!lookupTag.contains(x)){
+      keywords.foreach(x => {
+        if (!lookupTag.contains(x)) {
           lookupTag += (x -> nexInt)
           nexInt += 1
         }
       })
       val sparkMasterAddress = "local[%d]".format(step)
       val spark = Factory.createSparkSession(appName, sparkMasterAddress)
-      val df = DataTransform.filterFlickrDataframe(Factory.readJsonAsDataframe(dataPath,spark,appName))
+      val df = DataTransform.filterFlickrDataframe(Factory.readJsonAsDataframe(dataPath, spark, appName))
       automaticEpsDbcan(keywords = keywords.toSeq, dataframe = df, partitions = step)
-      val elapsedTime = System.currentTimeMillis() -tIn
-      val singleResult = TestResults("%d".format(step), elapsedTime=elapsedTime.toDouble/1000)
+      val elapsedTime = System.currentTimeMillis() - tIn
+      val singleResult = TestResults("%d".format(step), elapsedTime = elapsedTime.toDouble / 1000)
       gson.toJson(singleResult)
       results = results :+ singleResult
-      logger.info("Time elapsed for step %d is %d".format(step,elapsedTime))
+      logger.info("Time elapsed for step %d is %d".format(step, elapsedTime))
       spark.close()
     })
     logger.info("Save results in json formats")
@@ -147,7 +153,10 @@ object RoIExtraction {
     if (pathToSave.equalsIgnoreCase(""))
       pathToSave = "./roi-executions-time.json"
     val saveExecutions = gson.toJson(results.toList.asJava)
-    new PrintWriter(pathToSave) { write(saveExecutions); close }
+    new PrintWriter(pathToSave) {
+      write(saveExecutions);
+      close
+    }
 
   }
 

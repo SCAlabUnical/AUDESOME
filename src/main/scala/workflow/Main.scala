@@ -39,10 +39,11 @@ object Main {
         stopWordPath = conf.stopWords(),
         cellSize = 200)
       logger.info("Keywords are:")
-      results._1.foreach(x=>logger.warning(s"keys: $x"))
+      results._1.foreach(x=>logger.warning(s"key: $x"))
       logger.info("Computing rois:")
       val rois = RoIExtraction.automaticEpsDbcan(results._1.toSeq,results._2, -1)
-      rois.foreach(x=>println(x))
+      logger.info("Rois are:")
+      rois.foreach(x=>logger.warning(s"roi: $x"))
     }
 
   }
