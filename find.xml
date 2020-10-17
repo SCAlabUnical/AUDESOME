@@ -1,7 +1,0 @@
-<application>
-  <component name="FindSettings">
-    <option name="customScope" value="Directory '.../nifi-dispatchernifi-processors/src/main/java/com/life/lifedataprotolib [nifi-dispatchernifi-processors]'" />
-    <option name="defaultScopeName" value="Directory '.../nifi-dispatchernifi-processors/src/main/java/com/life/lifedataprotolib [nifi-dispatchernifi-processors]'" />
-    <option name="SEARCH_SCOPE" value="Directory '.../nifi-dispatchernifi-processors/src/main/java/com/life/lifedataprotolib [nifi-dispatchernifi-processors]'" />
-  </component>
-</application>
