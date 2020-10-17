@@ -10,7 +10,7 @@ import com.spatial4j.core.context.SpatialContext
 import com.vividsolutions.jts.geom.{Coordinate, Geometry, GeometryFactory}
 import dataServices.transform.DataTransform
 import distance.KDistUtility
-import services.keywords.{CellLCurve, CellTFIDF}
+import services.keywords.KeywordsExtraction
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.{HashPartitioner, Partitioner}
 import org.apache.spark.ml.fpm.{FPGrowth, FPGrowthModel}
@@ -300,17 +300,17 @@ object MainWorkflowRoITraj {
       }
       if (algoType.toUpperCase().equalsIgnoreCase("TF-IDF")){
         println("Use algorithm TF-IDF")
-        keywords = CellTFIDF.computeRddTfIdfLogScaled(dataPath,spark,stopWord,200).toSeq
+        keywords = KeywordsExtraction.computeRddTfIdfLogScaled(dataPath,spark,stopWord,200).toSeq
         //services.keywords = KeywordsTFIDFSpark.tfidfKeywordsAlgo(df,stopWord)
       }
       else if(algoType.toUpperCase.equals("LCURVE")){
         println("Use algorithm lcurve")
-        keywords = CellLCurve.computeRddLcurve(dataPath,spark,stopWord,200).toSeq
+        keywords = KeywordsExtraction.computeRddLcurve(dataPath,spark,stopWord,200).toSeq
         //services.keywords = KeywordsLCurveSpark.lcurvefKeywordsAlgo(df,stopWord)
       }
       else{
         println("Use default algorithms TF-IDF")
-        keywords = CellTFIDF.computeRddTfIdfLogScaled(dataPath,spark,stopWord,200).toSeq
+        keywords = KeywordsExtraction.computeRddTfIdfLogScaled(dataPath,spark,stopWord,200).toSeq
         //services.keywords = KeywordsTFIDFSpark.tfidfKeywordsAlgo(df,stopWord)
       }
     }
