@@ -215,7 +215,7 @@ object KeywordsExtraction {
   }
 
 
-  def computeRddLcurve(dataPath: String, spark: SparkSession, stopWordPath: String, cellSize: Int): Set[String] = {
+  def computeRddLcurve(dataPath: String, spark: SparkSession, stopWordPath: String, cellSize: Int): (Set[String], org.apache.spark.sql.DataFrame) = {
     val df = FlickrJsonDao(spark).readData(dataPath)//DataTransform.filterFlickrDataframe(Factory.readJsonAsDataframe(dataPath, spark, appName))
     val stopWordSet = Source.fromFile(stopWordPath).getLines.toSet
 
@@ -270,7 +270,7 @@ object KeywordsExtraction {
     finalResults.foreach(keyword => {
       returnKeywords = returnKeywords :+ keyword.term
     })
-    returnKeywords.toSet
+    (returnKeywords.toSet, df)
   }
 
   def main(args: Array[String]): Unit = {
