@@ -10,8 +10,8 @@ import com.vividsolutions.jts.geom.Geometry
 import org.apache.spark.sql.{DataFrame, Row}
 import trajectory.util.KMLUtils
 import java.time.LocalDate
+import java.time._
 import java.time.format.DateTimeFormatter
-
 import dataServices.transform.DataTransform
 import org.apache.spark.mllib.fpm.FPGrowth.FreqItemset
 import org.apache.spark.mllib.fpm.{AssociationRules, FPGrowth, PrefixSpan}
@@ -27,7 +27,7 @@ object TrajectoryExtraction {
   val defaultKeywords = "/home/emanuele/IdeaProjects/SparkTest/input/services.keywords/keywordslcurve.txt"
   val appName = "TrajectoryExtraction"
   val kmlPath = "/home/emanuele/IdeaProjects/SparkTest/input/kml/Rome/refactoring/00Rome-Realshapes.kml"
-
+  val datetime_format = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm:ss a")
   def readRois(str: String): Array[(String, Geometry)] = {
     null
   }
@@ -36,7 +36,7 @@ object TrajectoryExtraction {
     val lat = x.getDouble(0)
     val lon = x.getDouble(1)
     val username = x.getString(3)
-    val daytime = LocalDate.parse(x.getString(4),DateTimeFormatter.ofPattern("MMM d, yyyy h:mm:ss a")).toEpochDay
+    val daytime = LocalDate.parse(x.getString(4),datetime_format).toEpochDay
     val point = GeoUtils.getPoint(lon, lat)
     var arr: Array[SingleTrajectory] = Array[SingleTrajectory]()
     for ((places, polygon) <- shapeMap) {
