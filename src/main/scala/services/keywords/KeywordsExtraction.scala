@@ -1,18 +1,9 @@
 package services.keywords
 
-import factory.Factory
 import org.apache.spark.sql.{Row, SparkSession}
-import com.google.gson.Gson
-
 import scala.collection.mutable
-import java.io.PrintWriter
-
-import dataServices.dao.FlickrJsonDao
+import dataServices.dao.{FlickrParquetDao,FlickrJsonDao}
 import dataServices.transform.DataTransform
-import org.apache.log4j.{Level, Logger}
-import util.TestResults
-
-import scala.collection.JavaConverters._
 import scala.io.Source
 
 object KeywordsExtraction {
@@ -26,6 +17,12 @@ object KeywordsExtraction {
   val minDocumentFrequency = 2
   val maxDocumentFrequency = 10
   val topN = 10
+  val globalElbowFunction: (Array[Int]) => Array[Double] = {
+    x => DataTransform.getElbowPoint(x)
+  }
+  val globalElbowFunctionScore: (mutable.WrappedArray[Double]) => Double = {
+    x => DataTransform.getElbowPointScore(x.toArray)(3)
+  }
 
   def containsHanScript(s: String): Boolean = s.codePoints.anyMatch((codepoint: Int) => Character.UnicodeScript.of(codepoint) eq Character.UnicodeScript.HAN)
 
@@ -90,7 +87,6 @@ object KeywordsExtraction {
     tempMap.toArray
   }
 
-
   def reducerFunction(map1: mutable.Map[String, Int], map2: mutable.Map[String, Int]): mutable.Map[String, Int] = {
     val merged = (map1.keySet ++ map2.keySet).map { i => (i, map1.getOrElse(i, 0) + map2.getOrElse(i, 0)) }.toMap
     val returnMap = mutable.Map() ++ merged
@@ -133,7 +129,7 @@ object KeywordsExtraction {
     /**
      * Given a Flickr's data path and spark session return set of services.keywords from
      */
-    val df = FlickrJsonDao(spark).readData(path = dataPath)//DataTransform.filterFlickrDataframe(Factory.readJsonAsDataframe(dataPath, spark, "computeRddTfIdfLogScaled"))
+    val df = FlickrJsonDao(spark).readData(path = dataPath) //DataTransform.filterFlickrDataframe(Factory.readJsonAsDataframe(dataPath, spark, "computeRddTfIdfLogScaled"))
     val stopWordSet = Source.fromFile(stopWordPath).getLines.toSet
 
     /**
@@ -157,7 +153,7 @@ object KeywordsExtraction {
       .map(x => (x._1, Math.log(documentLenght / x._2.toDouble)))
       .collectAsMap()
       .toMap
-      .filter(x=>x._2 >= minDocumentFrequency && x._2 <= maxDocumentFrequency)
+      .filter(x => x._2 >= minDocumentFrequency && x._2 <= maxDocumentFrequency)
 
     /**
      * Compute term frequency per cell
@@ -187,14 +183,6 @@ object KeywordsExtraction {
       .map(x => x._2)
   }
 
-  val globalElbowFunction: (Array[Int]) => Array[Double] = {
-    x => DataTransform.getElbowPoint(x)
-  }
-
-  val globalElbowFunctionScore: (mutable.WrappedArray[Double]) => Double = {
-    x => DataTransform.getElbowPointScore(x.toArray)(3)
-  }
-
   def localLCurveFilterFunction(x: mutable.Map[String, Int], minOccurence: Int, documentFrequencyMap: Map[String, Double]): mutable.Map[String, Double] = {
     val resultMap = mutable.Map[String, Double]()
     x.filter(_._2 > minOccurence).foreach(entry => {
@@ -214,9 +202,8 @@ object KeywordsExtraction {
       .map(x => new Keywords(term = x._1, score = x._2))
   }
 
-
-  def computeRddLcurve(dataPath: String, spark: SparkSession, stopWordPath: String, cellSize: Int): (Set[String], org.apache.spark.sql.DataFrame) = {
-    val df = FlickrJsonDao(spark).readData(dataPath)//DataTransform.filterFlickrDataframe(Factory.readJsonAsDataframe(dataPath, spark, appName))
+  def computeRddLcurve(dataPath: String, spark: SparkSession, stopWordPath: String, cellSize: Int): Set[String] = {
+    val df = FlickrParquetDao(spark).readData(dataPath) //DataTransform.filterFlickrDataframe(Factory.readJsonAsDataframe(dataPath, spark, appName))
     val stopWordSet = Source.fromFile(stopWordPath).getLines.toSet
 
     /**
@@ -270,67 +257,8 @@ object KeywordsExtraction {
     finalResults.foreach(keyword => {
       returnKeywords = returnKeywords :+ keyword.term
     })
-    (returnKeywords.toSet, df)
+    returnKeywords.toSet
   }
 
-  def main(args: Array[String]): Unit = {
-    Logger.getLogger("org").setLevel(Level.OFF)
-    Logger.getLogger("akka").setLevel(Level.OFF)
-    var dataPath = scala.io.StdIn.readLine("Insert dataset's absoulute path or leave empty to use default one: ")
-    if (dataPath.equalsIgnoreCase(""))
-      dataPath = defaultDataset
-    var stopWord = scala.io.StdIn.readLine("Insert precomputed stop word's set: ")
-    if (stopWord.equalsIgnoreCase(""))
-      stopWord = defaultStopWord
-    val cellSize = 100
-    //val df = DataTransform.filterFlickrDataframe(Factory.readJsonAsDataframe(dataPath,spark,appName))
-    //val stopWordSet = Source.fromFile(stopWord).getLines.toSet
-    val tests = Array[Int](8)
-    var results = Seq[TestResults]()
-    val gson = new Gson()
-    val logger = Logger.getLogger("KeywordsExtraction@Test")
-    logger.info("Executing test for TFIDF using %d minOccurrence and %d topKey".format(minOcc,topN))
-    tests.foreach(x=>println(x))
-//    tests.foreach(step=>{
-//      logger.info("Executing step %d".format(step))
-//      val tIn = System.currentTimeMillis()
-//      val sparkMasterAddress = "local[%d]".format(step)
-//      val spark = Factory.createSparkSession(appName, sparkMasterAddress)
-//      computeRddTfIdfLogScaled(dataPath,spark,stopWord,cellSize)
-//      val elapsedTime = System.currentTimeMillis() -tIn
-//      val singleResult = TestResults("%d".format(step), elapsedTime=elapsedTime.toDouble/1000)
-//      gson.toJson(singleResult)
-//      results = results :+ singleResult
-//      logger.info("Time elapsed for step %d is %d".format(step,elapsedTime))
-//      spark.close()
-//    })
-//    logger.info("Save results in json formats")
-//    var pathToSave = scala.io.StdIn.readLine("Insert path to save execution outputs: ")
-//    if (pathToSave.equalsIgnoreCase(""))
-//      pathToSave = "./tfidf-executions-time.json"
-//    var saveExecutions = gson.toJson(results.toList.asJava)
-//    new PrintWriter(pathToSave) { write(saveExecutions); close }
-//    logger.info("Executing test using Discrete L-Curve global and local cut with %d minOccurrence and %d topKey".format(minOcc,topN))
-//    var lCurveResults = Seq[TestResults]()
-    tests.foreach(step=>{
-      logger.info("Executing step %d".format(step))
-      val tIn = System.currentTimeMillis()
-      val sparkMasterAddress = "local[%d]".format(step)
-      val spark = Factory.createSparkSession(appName, sparkMasterAddress)
-      computeRddLcurve(dataPath,spark,stopWord,cellSize)
-      val elapsedTime = System.currentTimeMillis() -tIn
-      val singleResult = TestResults("%d".format(step), elapsedTime=elapsedTime.toDouble/1000)
-      //lCurveResults = lCurveResults :+ singleResult
-      logger.info("Time elapsed for step %d is %d".format(step,elapsedTime))
-      spark.close()
-    })
-//    logger.info("Save results in json formats")
-//    pathToSave = scala.io.StdIn.readLine("Insert path to save execution outputs: ")
-//    if (pathToSave.equalsIgnoreCase(""))
-//      pathToSave = "./tfidf-executions-time.json"
-//    saveExecutions = gson.toJson(lCurveResults.toList.asJava)
-//    new PrintWriter(pathToSave) { write(saveExecutions); close }
-
-  }
 
 }

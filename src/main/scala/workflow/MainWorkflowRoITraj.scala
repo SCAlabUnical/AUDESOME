@@ -305,7 +305,7 @@ object MainWorkflowRoITraj {
       }
       else if(algoType.toUpperCase.equals("LCURVE")){
         println("Use algorithm lcurve")
-        keywords = KeywordsExtraction.computeRddLcurve(dataPath,spark,stopWord,200)._1.toSeq
+        keywords = KeywordsExtraction.computeRddLcurve(dataPath,spark,stopWord,200).toSeq
         //services.keywords = KeywordsLCurveSpark.lcurvefKeywordsAlgo(df,stopWord)
       }
       else{
