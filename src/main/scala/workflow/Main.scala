@@ -1,11 +1,12 @@
 package workflow
 
-import java.util.logging.{Logger}
-import dataServices.dao.{FlickrJsonDao, AbstractDao}
-import services.keywords.{Cell, Keywords, KeywordsExtraction}
+import java.util
+import java.util.logging.Logger
+import scala.collection.JavaConverters._
+import services.keywords.KeywordsExtraction
+import services.fpm.TrajectoryExtraction
 import services.parca.RoIExtraction
 import factory.Factory
-
 import org.rogach.scallop._
 
 class WorkflowConfiguration(arguments: Seq[String]) extends ScallopConf(arguments) {
@@ -40,10 +41,17 @@ object Main {
         cellSize = 200)
       logger.info("Keywords are:")
       results._1.foreach(x=>logger.warning(s"key: $x"))
-      logger.info("Computing rois:")
+      logger.info("Computing rois")
       val rois = RoIExtraction.automaticEpsDbcan(results._1.toSeq,results._2, -1)
       logger.info("Rois are:")
       rois.foreach(x=>logger.warning(s"roi: $x"))
+      val stringShapeMap: util.Map[String, String] = new util.HashMap[String, String]
+      rois.foreach(x=>{
+        stringShapeMap.put(x._1, x._2.toString)
+      })
+      logger.info("Computing trajectories")
+      val trajectories = TrajectoryExtraction.computeTrajectoryUsingFPGrowth(df = results._2, stringShapeMap = stringShapeMap.asScala)
+      trajectories._2.foreach(x=>logger.warning(s"Trajectory: ${x}"))
     }
 
   }

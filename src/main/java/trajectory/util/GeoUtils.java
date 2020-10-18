@@ -230,6 +230,7 @@ public class GeoUtils {
 		return shapeString;
 	}
 
+
 	public static Shape getPolygonFromString(String shapeString){
 		try {
 			return jtsctx.getFormats().getWktReader().read(shapeString);
