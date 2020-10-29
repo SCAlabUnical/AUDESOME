@@ -12,6 +12,8 @@ import trajectory.util.KMLUtils
 import java.time.LocalDate
 import java.time._
 import java.time.format.DateTimeFormatter
+import java.util.Locale
+
 import dataServices.transform.DataTransform
 import org.apache.spark.mllib.fpm.FPGrowth.FreqItemset
 import org.apache.spark.mllib.fpm.{AssociationRules, FPGrowth, PrefixSpan}
@@ -27,7 +29,7 @@ object TrajectoryExtraction {
   val defaultKeywords = "/home/emanuele/IdeaProjects/SparkTest/input/services.keywords/keywordslcurve.txt"
   val appName = "TrajectoryExtraction"
   val kmlPath = "/home/emanuele/IdeaProjects/SparkTest/input/kml/Rome/refactoring/00Rome-Realshapes.kml"
-  val datetime_format = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm:ss a")
+  val datetime_format = DateTimeFormatter.ofPattern("MMM d, yyyy h:mm:ss a", Locale.ENGLISH)
   def readRois(str: String): Array[(String, Geometry)] = {
     null
   }
@@ -36,14 +38,14 @@ object TrajectoryExtraction {
     val lat = x.getDouble(0)
     val lon = x.getDouble(1)
     val username = x.getString(3)
-    val daytime = LocalDate.parse(x.getString(4),datetime_format).toEpochDay
+    val daytime = LocalDate.parse(x.getAs[String](4),datetime_format).toEpochDay
     val point = GeoUtils.getPoint(lon, lat)
     var arr: Array[SingleTrajectory] = Array[SingleTrajectory]()
     for ((places, polygon) <- shapeMap) {
       try {
         val pol = GeoUtils.getPolygonFromString(polygon)
         if (GeoUtils.isContained(point, pol)) {
-          val trajectory = new SingleTrajectory(poi = places, daytime = LocalDate.parse(x.getString(4),DateTimeFormatter.ofPattern("MMM d, yyyy h:mm:ss a")).toEpochDay)
+          val trajectory = new SingleTrajectory(poi = places, daytime = LocalDate.parse(x.getString(4),datetime_format).toEpochDay)
           arr = arr :+ trajectory
         }
       }
