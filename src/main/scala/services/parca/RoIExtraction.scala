@@ -14,7 +14,6 @@ import distance.KDistUtility
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.HashPartitioner
 import org.apache.spark.sql.Row
-import workflow.MainWorkflowRoITraj.{lookupTag, nexInt}
 import workflow.utils.{ClusterPoint, GeometryUtils}
 
 import scala.collection.JavaConverters._
@@ -30,6 +29,7 @@ object RoIExtraction {
   val appName = "RoIExtraction"
   val defaultDataset: String = "/home/emanuele/Documents/Tesi/FlickrRome2017.json"
   val defaultStopWord: String = "/home/emanuele/IdeaProjects/SparkTest/input/services.keywords/keywordslcurve.txt"
+  var nexInt:Int = 0
 
   val createFromRdd: (Row, Seq[String]) => Array[Tuple2[Int, ClusterPoint]] = {
     (x, y) => {
