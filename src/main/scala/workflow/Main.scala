@@ -7,8 +7,9 @@ import services.keywords.KeywordsExtraction
 import services.fpm.TrajectoryExtraction
 import services.parca.RoIExtraction
 import factory.Factory
-import dataServices.dao.{FlickrJsonDao,FlickrParquetDao}
+import dataServices.dao.{FlickrJsonDao,FlickrParquetDao, AbstractDao}
 import org.rogach.scallop._
+import java.nio.file.Paths
 
 class WorkflowConfiguration(arguments: Seq[String]) extends ScallopConf(arguments) {
   val sparkHostname = opt[String](default = Option("local[4]"))
@@ -42,7 +43,13 @@ object Main {
     val spark = Factory.createSparkSession(conf.sparkApplication(), conf.sparkHostname())
     if (conf.datasetPath.isDefined) {
       logger.info("datasetPath are: " + conf.datasetPath())
-      val dao = FlickrParquetDao(spark).readData(path = conf.datasetPath())
+      val fileName = Paths.get(conf.datasetPath()).getFileName
+      val extension = fileName.toString.split("\\.").last
+      var dao: org.apache.spark.sql.Dataset[org.apache.spark.sql.Row]= null
+      if (extension.equalsIgnoreCase("parquet"))
+        dao = FlickrParquetDao(spark).readData(path = conf.datasetPath())
+      else if (extension.equalsIgnoreCase("json"))
+        dao = FlickrJsonDao(spark).readData(path = conf.datasetPath())
       var keywords = Set[String]()
       if (!conf.keywordsPath.isDefined) {
         logger.info("Computing keywords")
