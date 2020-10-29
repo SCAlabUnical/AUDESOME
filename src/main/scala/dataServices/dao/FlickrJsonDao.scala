@@ -9,7 +9,7 @@ import org.apache.spark.sql.{Dataset, Row, SparkSession}
 
 class FlickrJsonDao private(_sqlSession: SparkSession) extends AbstractDao(_sqlSession) {
 
-  private val FLICKR_DEFAULT_PATH = "flickr/dataset.json"
+  private val FLICKR_DEFAULT_PATH = "src/main/resources"
   private val logger = Logger.getLogger("FlickrJsonDao")
 
   /**

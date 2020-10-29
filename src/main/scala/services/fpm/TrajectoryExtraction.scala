@@ -155,7 +155,7 @@ object TrajectoryExtraction {
       pathToKml = kmlPath
     val rois : Array[(String,Geometry)] = readRois("")
     val stringShapeMap = KMLUtils.lookupFromKml(pathToKml).asScala
-    val tests = Array[Int](8,16,32,64)
+    val tests = Array[Int](8)
     var results = Seq[TestResults]()
     val gson = new Gson()
     val logger = Logger.getLogger("TrajectoryExtraction@Test")

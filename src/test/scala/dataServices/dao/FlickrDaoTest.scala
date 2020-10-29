@@ -16,7 +16,8 @@ class FlickrDaoTest {
 
   @Test
   def isJsonReading(): Unit = {
-    val df = FlickrJsonDao(sqlSession).readData(path = "src/main/resources/datasets/FlickrRome2017-25.json")
+    //val df = FlickrJsonDao(sqlSession).readData(path = "src/main/resources/datasets/FlickrRome2017-25.json")
+    val df = FlickrParquetDao(sqlSession).readData()
     df.show(50)
     Assert.fail()
   }
