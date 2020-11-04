@@ -12,9 +12,10 @@ import org.rogach.scallop._
 import java.nio.file.Paths
 
 class WorkflowConfiguration(arguments: Seq[String]) extends ScallopConf(arguments) {
-  val sparkHostname = opt[String](default = Option("local[4]"))
+  val sparkHostname = opt[String]()
+  val cpuCount = opt[Int](default = Option(4), descr = "Number of cores for spark driver in local execution")
   val sparkApplication = opt[String](default = Option("AUDESOME"))
-  val datasetPath = opt[String](default = Option("src/main/resources/datasets/rome/FlickrRome2017-25.parquet"))
+  val datasetPath = opt[String](default = Option("src/main/resources/datasets/rome/rome.parquet"))
   val stopWords = opt[String](default = Option("src/main/resources/stopWord/rome.txt"))
   val keywordsPath = opt[String](default = Option("src/main/resources/keywords/rome.txt"))
   val roisPath = opt[String]()
@@ -40,7 +41,12 @@ object Main {
   def main(args: Array[String]) {
     val conf = new WorkflowConfiguration(args)
     logger.info("Strarting workflow using configuration %s".format(conf.toString()))
-    val spark = Factory.createSparkSession(conf.sparkApplication(), conf.sparkHostname())
+    var sparkEndpoint = ""
+    if (!conf.sparkHostname.isDefined)
+      sparkEndpoint = s"local[${conf.cpuCount()}]"
+    else
+      sparkEndpoint = conf.sparkHostname()
+    val spark = Factory.createSparkSession(conf.sparkApplication(), sparkEndpoint)
     if (conf.datasetPath.isDefined) {
       logger.info("datasetPath are: " + conf.datasetPath())
       val fileName = Paths.get(conf.datasetPath()).getFileName
