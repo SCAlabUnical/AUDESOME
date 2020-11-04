@@ -1,0 +1,1 @@
+docker build -t audesome . && docker run audesome:latest

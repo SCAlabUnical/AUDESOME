@@ -1,6 +1,5 @@
 name := "AUDESOME"
 version := "0.1"
-
 scalaVersion := "2.12.10"
 
 libraryDependencies += "org.apache.spark" %% "spark-core" % "2.4.5"
@@ -16,3 +15,6 @@ libraryDependencies += "com.novocode" % "junit-interface" % "0.8" % "test->defau
 libraryDependencies += "com.github.workingDog" %% "scalakml" % "1.3"
 libraryDependencies += "de.micromata.jak" % "JavaAPIforKml" % "2.2.1"
 libraryDependencies += "org.rogach" %% "scallop" % "3.5.1"
+
+// set the main class for 'sbt run'
+mainClass in (Compile, run) := Some("workflow.Main")

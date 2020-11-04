@@ -12,3 +12,11 @@ millions of geotagged items published in Flickr in the areas of Rome and Paris, 
 ##HOW TO RUN THE APPLICATION
 Run the Main class in /src/main/scale/workflow/Main as a Spark Application.
 To compile the project you can use IntelliJ IDE (Scala project + sbt as build tool).
+
+## Docker support
+In order to use the source code we provide a Dockerfile definition with a pratical example. **To use container you must have docker runtime environment**.
+To use container open a shell and type:
+
+```shell script
+sh ./run.sh
+```
