@@ -14,7 +14,7 @@ import java.nio.file.Paths
 class WorkflowConfiguration(arguments: Seq[String]) extends ScallopConf(arguments) {
   val sparkHostname = opt[String](default = Option("local[4]"))
   val sparkApplication = opt[String](default = Option("AUDESOME"))
-  val datasetPath = opt[String](default = Option("src/main/resources/datasets/rome/rome.parquet"))
+  val datasetPath = opt[String](default = Option("src/main/resources/datasets/rome/FlickrRome2017-25.json"))
   val stopWords = opt[String](default = Option("src/main/resources/stopWord/rome.txt"))
   val keywordsPath = opt[String](default = Option("src/main/resources/keywords/rome.txt"))
   val roisPath = opt[String]()
