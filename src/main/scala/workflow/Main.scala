@@ -12,18 +12,18 @@ import org.rogach.scallop._
 import java.nio.file.Paths
 
 class WorkflowConfiguration(arguments: Seq[String]) extends ScallopConf(arguments) {
-  val sparkHostname = opt[String]()
+  val sparkHostname = opt[String](descr = "Endpoint of a spark cluster (empty if you want to use a local cluster)")
   val threadsCount = opt[Int](default = Option(4), descr = "Number of threads for spark driver in local execution")
   val numberOfPartitions = opt[Int](default = Option(8), descr = "Number of partitions used for Dataframe")
-  val driverMemory = opt[String](default = Option("1g"))
-  val executorMemory = opt[String](default = Option("4g"))
-  val sparkApplication = opt[String](default = Option("AUDESOME"))
-  val datasetPath = opt[String](default = Option("src/main/resources/datasets/rome/rome.parquet"))
-  val stopWords = opt[String](default = Option("src/main/resources/stopWord/rome.txt"))
-  val keywordsPath = opt[String](default = Option("src/main/resources/keywords/rome.txt"))
-  val roisPath = opt[String]()
-  val debugLevel = opt[Boolean](default = Option(true))
-  val limits = opt[Int](default = Option(50))
+  val driverMemory = opt[String](default = Option("1g"), descr = "Amount of memory reserved for driver program application")
+  val executorMemory = opt[String](default = Option("4g"),descr = "Amount of memory reserved for Spark executor")
+  val sparkApplication = opt[String](default = Option("AUDESOME"), descr = "Name of current spark application")
+  val datasetPath = opt[String](default = Option("src/main/resources/datasets/rome/rome.parquet"), descr = "Path to input dataset.")
+  val stopWords = opt[String](default = Option("src/main/resources/stopWord/rome.txt"), descr = "Path to stop word's file.")
+  val keywordsPath = opt[String](default = Option("src/main/resources/keywords/rome.txt"), descr = "Path to keyword's file.")
+  val roisPath = opt[String](descr = "Path to computed roi's file.")
+  val debugLevel = opt[Boolean](default = Option(true), descr = "Log level.")
+  val limits = opt[Int](default = Option(50), descr = "Limit output.")
   verify()
 }
 
