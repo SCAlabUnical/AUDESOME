@@ -13,7 +13,10 @@ import java.nio.file.Paths
 
 class WorkflowConfiguration(arguments: Seq[String]) extends ScallopConf(arguments) {
   val sparkHostname = opt[String]()
-  val cpuCount = opt[Int](default = Option(4), descr = "Number of cores for spark driver in local execution")
+  val threadsCount = opt[Int](default = Option(4), descr = "Number of threads for spark driver in local execution")
+  val numberOfPartitions = opt[Int](default = Option(8), descr = "Number of partitions used for Dataframe")
+  val driverMemory = opt[String](default = Option("1g"))
+  val executorMemory = opt[String](default = Option("4g"))
   val sparkApplication = opt[String](default = Option("AUDESOME"))
   val datasetPath = opt[String](default = Option("src/main/resources/datasets/rome/rome.parquet"))
   val stopWords = opt[String](default = Option("src/main/resources/stopWord/rome.txt"))
@@ -43,10 +46,10 @@ object Main {
     logger.info("Strarting workflow using configuration %s".format(conf.toString()))
     var sparkEndpoint = ""
     if (!conf.sparkHostname.isDefined)
-      sparkEndpoint = s"local[${conf.cpuCount()}]"
+      sparkEndpoint = s"local[${conf.threadsCount()}]"
     else
       sparkEndpoint = conf.sparkHostname()
-    val spark = Factory.createSparkSession(conf.sparkApplication(), sparkEndpoint)
+    val spark = Factory.createSparkSession(conf.sparkApplication(), sparkEndpoint, conf.numberOfPartitions(), conf.driverMemory(), conf.executorMemory())
     if (conf.datasetPath.isDefined) {
       logger.info("datasetPath are: " + conf.datasetPath())
       val fileName = Paths.get(conf.datasetPath()).getFileName

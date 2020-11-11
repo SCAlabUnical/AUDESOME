@@ -5,17 +5,19 @@ import org.apache.spark.sql.SparkSession
 
 object Factory {
 
-  def createSparkSession(appName: String, masterAddress: String): SparkSession = {
+  def createSparkSession(appName: String, masterAddress: String, numberOfPartition:Int = 8, driverMemory:String = "1g", executorMemory:String = "8g"): SparkSession = {
     val spark = SparkSession
       .builder
       .appName(appName)
       .master(masterAddress)
       .config("spark.driver.bindAddress","localhost")
       .config("spark.scheduler.mode", "FIFO")
+      .config("spark.driver.memory", driverMemory)
+      .config("spark.executor.memory", executorMemory)
       .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .config("spark.kryoserializer.buffer.max", "1024m")
       .getOrCreate()
-    spark.sqlContext.sql("set spark.sql.shuffle.partitions=%d".format(200))
+    spark.sqlContext.sql("set spark.sql.shuffle.partitions=%d".format(numberOfPartition))
     spark
   }
 
