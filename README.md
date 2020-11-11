@@ -42,6 +42,11 @@ Command arguments are:
   -h, --help                          Show help message
 ```
 
+For example to start audesome with 2 threads: 
+```shell script
+sbt run -t 2
+```
+
 ## Docker support
 In order to use the source code we provide a Dockerfile definition with a pratical example. **To use container you must have docker runtime environment**.
 To use container open a shell and type:

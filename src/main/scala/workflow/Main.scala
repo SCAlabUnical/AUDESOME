@@ -43,7 +43,7 @@ object Main {
 
   def main(args: Array[String]) {
     val conf = new WorkflowConfiguration(args)
-    logger.info("Strarting workflow using configuration %s".format(conf.toString()))
+    logger.info("Strarting workflow using configuration %d".format(conf.threadsCount()))
     var sparkEndpoint = ""
     if (!conf.sparkHostname.isDefined)
       sparkEndpoint = s"local[${conf.threadsCount()}]"
