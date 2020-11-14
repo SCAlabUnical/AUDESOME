@@ -44,7 +44,22 @@ Command arguments are:
 
 For example to start audesome with 2 threads: 
 ```shell script
-sbt run -t 2
+sbt run --threads-count 2
+```
+
+### AUDESOME with 2 threads and 50 partitions
+```shell script
+sbt run --threads-count 2 --number-of-partitions 50
+```
+
+### AUDESOME with 2 threads and 50 partitions and custom memory
+```shell script
+sbt run --threads-count 2 --number-of-partitions 50 -driver-memory 1Gi --executor-memory 2Gi
+```
+
+### AUDESOME change data path
+```shell script
+sbt run --dataset-path /path/to/input --keywords-path /path/to/keywords
 ```
 
 ## Docker support
