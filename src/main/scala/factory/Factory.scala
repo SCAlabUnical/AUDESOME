@@ -16,6 +16,8 @@ object Factory {
       .config("spark.executor.memory", executorMemory)
       .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .config("spark.kryoserializer.buffer.max", "1024m")
+      .config("spark.sql.caseSensitive", "true")
+
       .getOrCreate()
     spark.sqlContext.sql("set spark.sql.shuffle.partitions=%d".format(numberOfPartition))
     spark
