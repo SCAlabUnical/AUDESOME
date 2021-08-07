@@ -69,3 +69,6 @@ To use container open a shell and type:
 ```shell script
 sh ./run.sh
 ```
+
+### How to cite
+L. Belcastro, F. Marozzo, E. Perrella, "Automatic detection of user trajectories from social media posts". Expert Systems with Applications, 2021.
